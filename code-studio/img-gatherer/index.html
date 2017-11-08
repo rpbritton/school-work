@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<form id="enterurl">
+		<input type="text" id="texturl">
+		<input type="submit">
+	</form>
+	<canvas id="oldCan" width="255" height="255"></canvas>
+	<canvas id="newCan" width="255" height="255"></canvas>
+	<span id="brightnesslabel" style="display: block">Brightness: </span>
+	<input id="brightness" type="range" min="0" max="255" value="128" style="display: inline-block"></input>
+	<button id="copy" style="display: block">Copy</button>
+	<textarea id="paste" style="display: block" readonly></textarea>
+</body>
+<script>
+	var oldCan = document.getElementById('oldCan');
+	var oldCanCtx = oldCan.getContext('2d');
+	var newCan = document.getElementById('newCan');
+	var newCanCtx = newCan.getContext('2d');
+
+	document.getElementById('enterurl').addEventListener('submit', ev => { addImg(ev) });
+	function addImg(ev) {
+		ev.preventDefault();
+		let image = new Image();
+		image.onload = function() {
+			let width = 255;
+			let height = Math.round(image.height/image.width*255);
+			if (image.width < image.height) {
+				width = Math.round(image.width/image.height*255);
+				height = 255;
+			}
+			oldCan.width = width;
+			oldCan.height = height;
+			newCan.width = width;
+			newCan.height = height;
+			oldCanCtx.drawImage(image, 0, 0, width, height);
+			update();
+		}
+		image.onerror = function() { alert("error: not image not found") };
+		image.crossOrigin = "anonymous";
+		image.src = document.getElementById('texturl').value;
+	};
+	function update() {
+		let brightness = document.getElementById('brightness').value-128;
+		let imageData = oldCanCtx.getImageData(0, 0, oldCan.width, oldCan.height);
+		let listOfBits = '';
+		let index = 0;
+		let total = 0;
+		for (let pixel of imageData.data) {
+			index++;
+			if (index === 4) {
+				if (total >= 0) {
+					listOfBits += 1;
+				}
+				else {
+					listOfBits += 0;
+				}
+				index = 0;
+				total = 0;
+			}
+			else {
+				total += pixel-128+brightness;
+			}
+		}
+		document.getElementById('paste').value = newCan.width.toString(2)+newCan.height.toString(2)+listOfBits;
+		for (let y = 0; y < newCan.height; y++) {
+			for (let x = 0; x < newCan.width; x++) {
+				let val = Number(listOfBits.substr(y*oldCan.width+x, 1));
+				if (val === 0) {
+					newCanCtx.fillStyle = "#000";
+				}
+				else {
+					newCanCtx.fillStyle = "#FFF";
+				}
+				newCanCtx.fillRect(x, y, 1, 1);
+			}
+		}
+	}
+
+	document.getElementById('brightness').addEventListener('input', ev => {
+		update();
+	});
+
+	document.getElementById('copy').addEventListener('click', ev => {
+		document.getElementById('paste').select();
+		document.execCommand('copy');
+	});
+</script>
+</html>
