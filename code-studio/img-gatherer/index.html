@@ -18,8 +18,7 @@
 	var newCan = document.getElementById('newCan');
 	var newCanCtx = newCan.getContext('2d');
 
-	document.getElementById('enterurl').addEventListener('submit', ev => { addImg(ev) });
-	function addImg(ev) {
+	document.getElementById('enterurl').addEventListener('submit', ev => { 
 		ev.preventDefault();
 		let image = new Image();
 		image.onload = function() {
@@ -36,16 +35,15 @@
 			oldCanCtx.drawImage(image, 0, 0, width, height);
 			update();
 		}
-		image.onerror = function() { alert("error: not image not found") };
+		image.onerror = function() { alert("error: not image not found\n(It also has to be a CORS enabled image... try Imgur or wikimedia)") };
 		image.crossOrigin = "anonymous";
 		image.src = document.getElementById('texturl').value;
-	};
+	});
+
 	function update() {
 		let brightness = document.getElementById('brightness').value-128;
 		let imageData = oldCanCtx.getImageData(0, 0, oldCan.width, oldCan.height);
-		let listOfBits = '';
-		let index = 0;
-		let total = 0;
+		let listOfBits = '', index = 0, total = 0;
 		for (let pixel of imageData.data) {
 			index++;
 			if (index === 4) {
