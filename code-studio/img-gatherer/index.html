@@ -35,7 +35,7 @@
 			oldCanCtx.drawImage(image, 0, 0, width, height);
 			update();
 		}
-		image.onerror = function() { alert("error: not image not found\n(It also has to be a CORS enabled image... try Imgur or wikimedia)") };
+		image.onerror = function() { alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia') };
 		image.crossOrigin = "anonymous";
 		image.src = document.getElementById('texturl').value;
 	});
