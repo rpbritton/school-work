@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+<head>
+	<title>Img Gatherer by rpbritton</title>
+	<link rel="shortcut icon" href="https://studio.code.org/favicon.ico" type="image/x-icon">
+</head>
 <body>
 	<form id="enterurl">
 		<input type="text" id="texturl" placeholder="enter the url">
@@ -11,6 +15,7 @@
 	<input id="brightness" type="range" min="0" max="255" value="128" style="display: inline-block"></input>
 	<button id="copy" style="display: block">Copy</button>
 	<textarea id="paste" style="display: block" readonly></textarea>
+	<a href="https://github.com/rpbritton/school-work/tree/master/code-studio/img-gatherer">Source Code</a>
 </body>
 <script>
 	var oldCan = document.getElementById('oldCan');
@@ -35,7 +40,7 @@
 			oldCanCtx.drawImage(image, 0, 0, width, height);
 			update();
 		}
-		image.onerror = function() { alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia') };
+		image.onerror = function() { alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia.') };
 		image.crossOrigin = "anonymous";
 		image.src = document.getElementById('texturl').value;
 	});
