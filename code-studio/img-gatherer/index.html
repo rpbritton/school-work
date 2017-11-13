@@ -65,7 +65,7 @@
 				total += pixel-128+brightness;
 			}
 		}
-		document.getElementById('paste').value = newCan.width.toString(2)+newCan.height.toString(2)+listOfBits;
+		document.getElementById('paste').value = newCan.width.toString(2)+newCan.height.toString(2)+listOfBits+signature;
 		for (let y = 0; y < newCan.height; y++) {
 			for (let x = 0; x < newCan.width; x++) {
 				let val = Number(listOfBits.substr(y*oldCan.width+x, 1));
@@ -88,5 +88,8 @@
 		document.getElementById('paste').select();
 		document.execCommand('copy');
 	});
+
+//	translates to: ' created using img-gatherer by rpbritton'
+	const signature = '00100000011000110111001001100101011000010111010001100101011001000010000001110101011100110110100101101110011001110010000001101001011011010110011100101101011001110110000101110100011010000110010101110010011001010111001000100000011000100111100100100000011100100111000001100010011100100110100101110100011101000110111101101110';
 </script>
 </html>
