@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Img Gatherer 8bit by rpbritton</title>
+	<link rel="shortcut icon" href="https://studio.code.org/favicon.ico" type="image/x-icon">
+</head>
+<body>
+	<form id="enterurl">
+		<input type="text" id="texturl" placeholder="enter the url">
+		<input type="submit">
+	</form>
+	<canvas id="oldCan" width="255" height="255"></canvas>
+	<canvas id="newCan" width="255" height="255"></canvas>
+	<button id="copy" style="display: block">Copy</button>
+	<textarea id="paste" style="display: block" readonly></textarea>
+	<a href="https://github.com/rpbritton/school-work/tree/master/code-studio/img-gatherer">Source Code</a>
+</body>
+<script>
+	var oldCan = document.getElementById('oldCan');
+	var oldCanCtx = oldCan.getContext('2d');
+	var newCan = document.getElementById('newCan');
+	var newCanCtx = newCan.getContext('2d');
+
+	document.getElementById('enterurl').addEventListener('submit', ev => { 
+		ev.preventDefault();
+		let image = new Image();
+		image.onload = function() {
+			let width = 255;
+			let height = Math.round(image.height/image.width*255);
+			if (image.width < image.height) {
+				width = Math.round(image.width/image.height*255);
+				height = 255;
+			}
+			oldCan.width = width;
+			oldCan.height = height;
+			newCan.width = width;
+			newCan.height = height;
+			oldCanCtx.drawImage(image, 0, 0, width, height);
+			update();
+		}
+		image.onerror = function() { alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia.') };
+		image.crossOrigin = "anonymous";
+		image.src = document.getElementById('texturl').value;
+	});
+
+	function update() {
+		let imageData = oldCanCtx.getImageData(0, 0, oldCan.width, oldCan.height);
+		let listOfBits = '', index = 0, total = 0;
+		for (let pixel of imageData.data) {
+			index++;
+			if (index === 4) {
+				index = 0;
+			}
+			else {
+				listOfBits += ('0' +pixel.toString(16)).slice(-2);
+			}
+		}
+		document.getElementById('paste').value = newCan.width.toString(16)+newCan.height.toString(16)+'18'+listOfBits+signature;
+		let x = 0, y = 0;
+		for (let y = 0; y < newCan.height; y++) {
+			for (let x = 0; x < newCan.width; x++) {
+				let r = listOfBits.substr((y*oldCan.width+x)*6, 2);
+				let g = listOfBits.substr((y*oldCan.width+x)*6+2, 2);
+				let b = listOfBits.substr((y*oldCan.width+x)*6+4, 2);
+				newCanCtx.fillStyle = '#' +r +g +b;
+				newCanCtx.fillRect(x, y, 1, 1);
+			}
+		}
+	}
+
+	document.getElementById('copy').addEventListener('click', ev => {
+		document.getElementById('paste').select();
+		document.execCommand('copy');
+	});
+
+//	translates to: ' created using img-gatherer by rpbritton'
+	const signature = '00100000011000110111001001100101011000010111010001100101011001000010000001110101011100110110100101101110011001110010000001101001011011010110011100101101011001110110000101110100011010000110010101110010011001010111001000100000011000100111100100100000011100100111000001100010011100100110100101110100011101000110111101101110';
+</script>
+</html>
