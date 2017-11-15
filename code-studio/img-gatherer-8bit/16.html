@@ -27,15 +27,16 @@
 		image.onload = function() {
 			let width = 16;
 			let height = Math.round(image.height/image.width*16);
-			if (image.width < image.height) {
+			if (image.width > image.height) {
 				width = Math.round(image.width/image.height*16);
 				height = 16;
 			}
-			oldCan.width = width;
+			console.log(width +" " +height);
+		/*	oldCan.width = width;
 			oldCan.height = height;
 			newCan.width = width;
 			newCan.height = height;
-			oldCanCtx.drawImage(image, 0, 0, width, height);
+		*/	oldCanCtx.drawImage(image, Math.round(16-width)/2, Math.round(16-height)/2, width, height);
 			update();
 		}
 		image.onerror = function() { alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia.') };
