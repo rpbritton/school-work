@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Full Turtle by rpbritton</title>
+	<link rel="shortcut icon" href="https://studio.code.org/favicon.ico" type="image/x-icon">
+</head>
+<body>
+	<form id="enterurl">
+		<input type="text" id="texturl" placeholder="enter the url"><br>
+		<input type="radio" name="contain" id="fill" checked="true"> Fill
+		<input type="radio" name="contain" id="fit"> Fit
+		<input type="color" id="color"> Background<br>
+		<input type="submit">
+	</form>
+	<canvas id="can" width="320" height="450"></canvas>
+	<button id="copy" style="display: block">Copy</button>
+	<textarea id="paste" style="display: block" readonly></textarea>
+	<a href="https://github.com/rpbritton/school-work/tree/master/code-studio/full-turtle">Source Code</a>
+</body>
+<script>
+	var can = document.getElementById('can');
+	var canCtx = can.getContext('2d');
+
+	let fill = document.getElementById('fill');
+	let fit = document.getElementById('fit');
+	let color = document.getElementById('color');
+
+	document.getElementById('enterurl').addEventListener('submit', ev => { 
+		ev.preventDefault();
+		let image = new Image();
+		image.onload = function() {
+			let width = can.width;
+			let height = Math.round(image.height/image.width*can.width);
+			if ((can.height > height && fill.checked) || (can.height < height && fit.checked)) {
+				width = Math.round(image.width/image.height*can.height);
+				height = can.height;
+			}
+			canCtx.fillStyle = color.value;
+			canCtx.fillRect(0, 0, can.width, can.height);
+			canCtx.drawImage(image, Math.round(can.width-width)/2, Math.round(can.height-height)/2, width, height);
+			update();
+		}
+		image.onerror = function() {
+			alert('Error: Image not found\n\nIt also has to have the \'Access-Control-Allow-Origin\' header.\nTry Imgur or Wikipedia.')
+		};
+		image.crossOrigin = 'anonymous';
+		image.src = document.getElementById('texturl').value;
+	});
+	function update() {
+		let imageData = canCtx.getImageData(0, 0, can.width, can.height);
+		let listOfCommands = 'penWidth(1);\npenUp();\nmoveTo(0,0);\npenDown();\n';
+		let index = 0, x = 0, y = 0, rgbPrev, rgb = '', move = 1;
+		for (let pixel of imageData.data) {
+			index++;
+			if (index === 4) {
+				if (rgb !== rgbPrev) {
+					listOfCommands += `moveTo(${x},${y});\npenRGB(${rgb}1);\n`;
+					rgbPrev = rgb;
+				}
+				x++;
+				if (x === can.width) {
+					listOfCommands += `moveTo(${x},${y});\npenUp();\n`;
+					x = 0;
+					y++;
+					listOfCommands += `moveTo(${x},${y});\npenDown();\n`;
+				}
+				rgb = '';
+				index = 0;
+			}
+			else {
+				rgb += `${pixel},`;
+			}
+		}
+		document.getElementById('paste').value = listOfCommands;
+	}
+	document.getElementById('copy').addEventListener('click', ev => {
+		document.getElementById('paste').select();
+		document.execCommand('copy');
+	});
+</script>
+</html>
