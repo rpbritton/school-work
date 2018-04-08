@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<link href="https://fonts.googleapis.com/css?family=Hi+Melody|Fira+Sans" rel="stylesheet">
+
 		<style>
 			body,html,.screen {
 				height: 100%;
@@ -17,7 +19,30 @@
 				--p2-bg-color: #9FA8DA;
 				--board-color: #FFEB3B;
 				--win-color: #8BC34A;
+				--bg-color: #EEEEEE;
+				background-color: var(--bg-color);
 				transition: background-color 2s;
+			}
+
+			h1 {
+				font-family: 'Hi Melody', cursive;
+				font-size: 50px;
+			}
+
+			h2,h3,input,button {
+				font-family: 'Fira Sans', sans-serif;
+				font-weight: normal;
+			}
+
+			input,button {
+				background-color: var(--bg-color);
+				border: 1px rgba(0, 0, 0, 0.5) solid;
+				border-radius: 2px;
+				padding: 7px;
+			}
+
+			input[type=submit],button {
+				padding: 5px 20px;
 			}
 
 			.hidden_screen {
@@ -30,6 +55,7 @@
 				position: absolute;
 				left: 0;
 				top: 0;
+				background-color: white;
 			}
 
 			@keyframes cycle-bg {
@@ -39,6 +65,20 @@
 				50% { background-color: #80DEEA; }
 				67% { background-color: #9FA8DA; }
 				83% { background-color: #CE93D8; }
+			}
+
+			#welcome_screen_content {
+				display: inline-block;
+				position: absolute;
+				left: 50%;
+				top: 40%;
+				transform: translate(-50%, -50%);
+				text-align: center;
+			}
+
+			#welcome_screen_content * {
+				display: block;
+				margin: 20px auto;
 			}
 
 			#game_wrapper {
@@ -52,16 +92,8 @@
 			#game_board {
 				border-spacing: 0;
 				box-shadow: 0 1px 3px 3px rgba(0, 0, 0, 0.15);
-			}
-
-			#info_label {
-				text-align: center;
-			}
-
-			#controls_wrapper {
-				position: absolute;
-				right: 10px;
-				bottom: 10px;
+				width: 532px;
+				height: 456px;
 			}
 
 			.board_space {
@@ -103,7 +135,7 @@
 			}
 
 			.falling_token {
-				transition: transform 1s;
+				transition: transform 1s ease;
 				transform: translateY(100vh);
 			}
 
@@ -111,39 +143,65 @@
 				0%,100% { border-color: transparent; }
 				50% { border-color: var(--win-color); }
 			}
+
+			#info_label {
+				text-align: center;
+			}
+
+			.scores {
+				display: inline-block;
+			}
+
+			#p1_score {
+				margin: 0 0 0 70px;
+			}
+
+			#p2_score {
+				margin: 0 70px 0 0;
+				float: right;
+			}
+
+			#controls_wrapper {
+				position: absolute;
+				right: 10px;
+				bottom: 10px;
+			}
 		</style>
 	</head>
 	<body>
 		<div id="game_wrapper">
 			<table id="game_board"></table>
-			<h1 id="info_label">...</h1>
+			<h2 id="info_label">...</h2>
+			<h3 class="scores" id="p1_score">Player 1's score: 0</h3>
+			<h3 class="scores" id="p2_score">Player 2's score: 0</h3>
 		</div>
 		<div id="controls_wrapper">
 			<button id="replay_button">Replay</button>
 			<button id="home_button">Home</button>
 		</div>
 		<div class="screen" id="welcome_screen">
-			<h1>Welcome to Connect 4!</h1>
-			<form id="player_info">
-				<input type=text id="p1_name" placeholder="Player 1"></input>
-				<input type=text id="p2_name" placeholder="Player 2"></input>
-				<input type=submit id="start_button" value="Start!"></input>
-			</form>
+			<div id="welcome_screen_content">
+				<h1>Connect 4!</h1>
+				<form id="player_info">
+					<input type=text id="p1_name" placeholder="Player 1"></input>
+					<input type=text id="p2_name" placeholder="Player 2"></input>
+					<input type=submit id="start_button" value="Start!"></input>
+				</form>
+			</div>
 		</div>
 	</body>
 	<script>
 		var board = document.getElementById("game_board");
 		var infoLabel = document.getElementById("info_label");
-		var playerTurn;
+		var player;
 		var tokens = 0;
-		var p1 = {
+		var players = [{
 			name: "Player 1",
 			score: 0
-		};
-		var p2 = {
+		}, {
 			name: "Player 2",
 			score: 0
-		};
+		}];
 		
 		document.getElementById("welcome_screen").style.animation = `cycle-bg 10s linear ${Math.random()*-10}s infinite`;
 
@@ -154,7 +212,7 @@
 		
 		document.getElementById("replay_button").addEventListener("click", replay);
 		function replay() {
-			playerTurn = Math.round(Math.random()) + 1;
+			player = Math.round(Math.random());
 			switchPlayer();
 
 			for (let r = 0; r < 6; r++) {
@@ -167,6 +225,7 @@
 					}
 				}
 			}
+			tokens = 0;
 
 			board.style.pointerEvents = "auto";
 		}
@@ -178,12 +237,16 @@
 		function start() {
 			document.getElementById("welcome_screen").classList.add("hidden_screen");
 
-			if (document.getElementById("p1_name").value)
-				p1.name = document.getElementById("p1_name").value.slice(0, 16);
-			if (document.getElementById("p2_name").value)
-				p2.name = document.getElementById("p2_name").value.slice(0, 16);
+			if (document.getElementById("p1_name").value) {
+				players[0].name = document.getElementById("p1_name").value.slice(0, 16);
+				document.getElementById("p1_score").innerHTML = `${players[0].name}'s score: 0`;
+			}
+			if (document.getElementById("p2_name").value) {
+				players[1].name = document.getElementById("p2_name").value.slice(0, 16);
+				document.getElementById("p2_score").innerHTML = `${players[1].name}'s score: 0`;
+			}
 
-			playerTurn = Math.round(Math.random()) + 1;
+			player = Math.round(Math.random());
 			switchPlayer();
 			createGameBoard();
 		}
@@ -209,19 +272,14 @@
 
 			addToken(cell);
 
-			if (tokens == 42)
-				console.log("tie");
-
-			if (!checkForWin(cell.cellIndex, cell.parentElement.rowIndex))
+			if (!checkForWin(cell.cellIndex, cell.parentElement.rowIndex) && !checkForTie())
 				switchPlayer();
 		}
 
 		function switchPlayer() {
-			playerTurn = (playerTurn == 1) ? 2 : 1;
-			setTimeout(function() {
-				infoLabel.innerHTML = `${(playerTurn == 1) ? p1.name : p2.name}'s turn.`;
-			}, 300);
-			document.body.style.backgroundColor = (playerTurn == 1) ? "var(--p1-bg-color)" : "var(--p2-bg-color)";
+			player = (player == 0) ? 1 : 0;
+			infoLabel.innerHTML = `${players[player].name}'s turn.`;
+			document.body.style.backgroundColor = `var(--p${player+1}-bg-color)`;
 		}
 
 		function getLowestCell(pos) {
@@ -237,7 +295,7 @@
 			let token = document.createElement("div");
 			token.classList.add("token");
 
-			if (playerTurn == 1)
+			if (!player)
 				token.classList.add("p1_token");
 			else
 				token.classList.add("p2_token");
@@ -264,14 +322,10 @@
 						}
 					}, 1000);
 
-					setTimeout(function() {
-						infoLabel.innerHTML = `${(playerTurn == 1) ? p1.name : p2.name} wins!`;
-					}, 300);
+					infoLabel.innerHTML = `${players[player].name} wins!`;
 
-					if (playerTurn == 1)
-						p1.score++;
-					else
-						p2.score++;
+					players[player].score++;
+					document.getElementById(`p${player+1}_score`).innerHTML = `${players[player].name}'s score: ${players[player].score}`;
 
 					return true;
 				}
@@ -287,7 +341,7 @@
 			y += yDir;
 
 			while (x >= 0 && x < 7 && y >= 0 && y < 6) {
-				if (checkCellOwnership(x, y) != playerTurn)
+				if (checkCellOwnership(x, y) != player)
 					return amount;
 
 				amount++;
@@ -303,11 +357,26 @@
 			if (!board.rows[y].cells[x].firstChild)
 				return null;
 			else if (board.rows[y].cells[x].firstChild.classList.contains("p1_token"))
-				return 1;
+				return 0;
 			else if (board.rows[y].cells[x].firstChild.classList.contains("p2_token"))
-				return 2;
+				return 1;
 			else
 				return null;
+		}
+
+		function checkForTie() {
+			if (tokens == 42) {
+				board.style.pointerEvents = "none";
+
+				document.body.style.backgroundColor = "var(--bg-color)";
+
+				infoLabel.innerHTML = "It's a tie!";
+
+				return true;
+			}
+
+			return false;
+
 		}
 	</script>
 </html>
