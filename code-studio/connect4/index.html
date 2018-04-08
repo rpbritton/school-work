@@ -2,33 +2,85 @@
 <html>
 	<head>
 		<style>
-			#welcome_screen,body,html {
+			body,html,.screen {
 				height: 100%;
 				width: 100%;
 				margin: 0;
 				padding: 0;
+				overflow: hidden;
+			}
+
+			body {
+				--p1-color: #F44336;
+				--p2-color: #3F51B5;
+				--p1-bg-color: #EF9A9A;
+				--p2-bg-color: #9FA8DA;
+				--board-color: #FFEB3B;
+				--win-color: #8BC34A;
+				transition: background-color 2s;
+			}
+
+			.hidden_screen {
+				transition: opacity 0.3s 0.3s;
+				opacity: 0;
+				pointer-events: none;
 			}
 
 			#welcome_screen {
 				position: absolute;
-				background-color: red;
-				display: none;
+				left: 0;
+				top: 0;
+			}
+
+			@keyframes cycle-bg {
+				0%, 100% { background-color: #EF9A9A; }
+				17% { background-color: #FFF59D; }
+				33% { background-color: #C5E1A5; }
+				50% { background-color: #80DEEA; }
+				67% { background-color: #9FA8DA; }
+				83% { background-color: #CE93D8; }
+			}
+
+			#game_wrapper {
+				display: inline-block;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+
+			#game_board {
+				border-spacing: 0;
+				box-shadow: 0 1px 3px 3px rgba(0, 0, 0, 0.15);
+			}
+
+			#info_label {
+				text-align: center;
+			}
+
+			#controls_wrapper {
+				position: absolute;
+				right: 10px;
+				bottom: 10px;
 			}
 
 			.board_space {
-				background-color: yellow;
-				width: 50px;
-				height: 50px;
+				background-color: var(--board-color);
+				width: 70px;
+				height: 70px;
 				padding: 0;
+				border: 3px solid rgba(0, 0, 0, 0.2);
 			}
 
 			.token {
-				width: (100% - 10px);
-				height: calc(100% - 10px);
-				border: 5px solid transparent;
+				width: 38px;
+				height: 38px;
+				border: 6px solid transparent;
 				pointer-events: none;
 				animation: token_drop 1s ease-in;
 				border-radius: 50%;
+				margin: 10px;
+				box-shadow: 0 1px 2px 2px rgba(0, 0, 0, 0.15);
 			}
 
 			@keyframes token_drop {
@@ -39,50 +91,100 @@
 			}
 
 			.p1_token {
-				background-color: blue;
+				background-color: var(--p1-color);
 			}
 
 			.p2_token {
-				background-color: red;
+				background-color: var(--p2-color);
 			}
 
 			.winning_token {
 				animation: show_winning_tokens 1s ease-in-out 0s infinite;
 			}
 
+			.falling_token {
+				transition: transform 1s;
+				transform: translateY(100vh);
+			}
+
 			@keyframes show_winning_tokens {
 				0%,100% { border-color: transparent; }
-				50% { border-color: green; }
+				50% { border-color: var(--win-color); }
 			}
 		</style>
 	</head>
 	<body>
-		<div id="game_board_wrapper">
+		<div id="game_wrapper">
 			<table id="game_board"></table>
+			<h1 id="info_label">...</h1>
 		</div>
-		<div id="welcome_screen">
+		<div id="controls_wrapper">
+			<button id="replay_button">Replay</button>
+			<button id="home_button">Home</button>
+		</div>
+		<div class="screen" id="welcome_screen">
 			<h1>Welcome to Connect 4!</h1>
 			<form id="player_info">
-				<input type=text id="player1_name"></input>
-				<input type=text id="player2_name"></input>
-				<input type=submit id="start_button"></input>
+				<input type=text id="p1_name" placeholder="Player 1"></input>
+				<input type=text id="p2_name" placeholder="Player 2"></input>
+				<input type=submit id="start_button" value="Start!"></input>
 			</form>
 		</div>
 	</body>
 	<script>
-		const board = document.getElementById("game_board");
+		var board = document.getElementById("game_board");
+		var infoLabel = document.getElementById("info_label");
 		var playerTurn;
+		var tokens = 0;
+		var p1 = {
+			name: "Player 1",
+			score: 0
+		};
+		var p2 = {
+			name: "Player 2",
+			score: 0
+		};
+		
+		document.getElementById("welcome_screen").style.animation = `cycle-bg 10s linear ${Math.random()*-10}s infinite`;
 
 		document.getElementById("player_info").addEventListener("submit", function(e) {
 			e.preventDefault();
 			start();
 		});
+		
+		document.getElementById("replay_button").addEventListener("click", replay);
+		function replay() {
+			playerTurn = Math.round(Math.random()) + 1;
+			switchPlayer();
 
-		start();
+			for (let r = 0; r < 6; r++) {
+				for (let c = 0; c < 7; c++) {
+					if (board.rows[r].cells[c].firstChild) {
+						board.rows[r].cells[c].firstChild.classList.add("falling_token");
+						setTimeout(function() {
+							board.rows[r].cells[c].innerHTML = "";
+						}, 1000);
+					}
+				}
+			}
+
+			board.style.pointerEvents = "auto";
+		}
+
+		document.getElementById("home_button").addEventListener("click", function() {
+			location.reload();
+		});
 
 		function start() {
-			document.getElementById("welcome_screen").style.display = "none";
+			document.getElementById("welcome_screen").classList.add("hidden_screen");
+
+			if (document.getElementById("p1_name").value)
+				p1.name = document.getElementById("p1_name").value.slice(0, 16);
+			if (document.getElementById("p2_name").value)
+				p2.name = document.getElementById("p2_name").value.slice(0, 16);
+
 			playerTurn = Math.round(Math.random()) + 1;
+			switchPlayer();
 			createGameBoard();
 		}
 
@@ -107,9 +209,19 @@
 
 			addToken(cell);
 
-			checkForWin(cell.cellIndex, cell.parentElement.rowIndex);
-			
+			if (tokens == 42)
+				console.log("tie");
+
+			if (!checkForWin(cell.cellIndex, cell.parentElement.rowIndex))
+				switchPlayer();
+		}
+
+		function switchPlayer() {
 			playerTurn = (playerTurn == 1) ? 2 : 1;
+			setTimeout(function() {
+				infoLabel.innerHTML = `${(playerTurn == 1) ? p1.name : p2.name}'s turn.`;
+			}, 300);
+			document.body.style.backgroundColor = (playerTurn == 1) ? "var(--p1-bg-color)" : "var(--p2-bg-color)";
 		}
 
 		function getLowestCell(pos) {
@@ -131,6 +243,8 @@
 				token.classList.add("p2_token");
 
 			cell.appendChild(token);
+
+			tokens++;
 		}
 
 		function checkForWin(x, y) {
@@ -149,6 +263,15 @@
 							board.rows[y - dir2Amount * yDir + yDir * i].cells[x - dir2Amount * xDir + xDir * i].firstChild.classList.add("winning_token");
 						}
 					}, 1000);
+
+					setTimeout(function() {
+						infoLabel.innerHTML = `${(playerTurn == 1) ? p1.name : p2.name} wins!`;
+					}, 300);
+
+					if (playerTurn == 1)
+						p1.score++;
+					else
+						p2.score++;
 
 					return true;
 				}
