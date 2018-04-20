@@ -278,12 +278,6 @@
 				switchPlayer();
 		}
 
-		function switchPlayer() {
-			player = (player == 0) ? 1 : 0;
-			infoLabel.innerHTML = `${players[player].name}'s turn.`;
-			document.body.style.backgroundColor = `var(--p${player+1}-bg-color)`;
-		}
-
 		function getLowestCell(pos) {
 			for (let r = 5; r >= 0; r--) {
 				if (!board.rows[r].cells[pos].firstChild)
@@ -297,7 +291,7 @@
 			let token = document.createElement("div");
 			token.classList.add("token");
 
-			if (!player)
+			if (player == 0)
 				token.classList.add("p1_token");
 			else
 				token.classList.add("p2_token");
@@ -305,6 +299,12 @@
 			cell.appendChild(token);
 
 			tokens++;
+		}
+
+		function switchPlayer() {
+			player = (player == 0) ? 1 : 0;
+			infoLabel.innerHTML = `${players[player].name}'s turn.`;
+			document.body.style.backgroundColor = `var(--p${player+1}-bg-color)`;
 		}
 
 		function checkForWin(x, y) {
@@ -362,8 +362,6 @@
 				return 0;
 			else if (board.rows[y].cells[x].firstChild.classList.contains("p2_token"))
 				return 1;
-			else
-				return null;
 		}
 
 		function checkForTie() {
